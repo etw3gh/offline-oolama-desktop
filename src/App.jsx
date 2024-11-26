@@ -15,9 +15,12 @@ import {
   TableBody,
   TableRow,
 } from './catalyst/table'
-import { ArrowDownTrayIcon, ArrowPathIcon } from '@heroicons/react/16/solid'
+import { ArrowDownTrayIcon, ArrowPathIcon, PlusCircleIcon } from '@heroicons/react/16/solid'
 import Spinner from './components/spinner'
+import Markdown from 'react-markdown'
+
 import './App.css'
+
 const tableRowClassName = 'border-b dark:border-slate-600 font-medium p-4 pl-8 pt-0 pb-3 text-slate-400 dark:text-slate-200 text-left'
 
 function formatBytes(bytes) {
@@ -107,6 +110,7 @@ function App() {
   }, [])
 
   async function makeQuery() {
+    setTimer(0)
     setWorking(true)
     const time = Date.now()
     try {
@@ -145,6 +149,11 @@ function App() {
     }
   }
 
+  const refreshModels = async () => {
+    setModels(await invoke("get_models"))
+    setAvailModels(await invoke("fetch_avail_models"))
+  }
+
   return (
     <main className="m-4">
       <h1 className="text-3xl font-bold underline">
@@ -152,9 +161,19 @@ function App() {
       </h1>
       <br />
 
-      <h2 className="text-2xl font-bold">
+      <div className="text-2xl font-bold flex items-center gap-2">
+        <ArrowPathIcon
+          className="size-6 text-blue-500"
+          onClick={() => refreshModels()}
+          title='Refresh Models'
+        />
+        <PlusCircleIcon
+            className="size-6 text-blue-500"
+            onClick={() => refreshModels()}
+            title='Add Models'
+        />
         Models
-      </h2>
+      </div>
       {
         alertText ? (
           <Alert open={true} onClose={() => setAlertText(null)}>
@@ -192,10 +211,10 @@ function App() {
                     Licence etc
                   </TableHeader>
                   <TableHeader>
-                    Update
+                    Name
                   </TableHeader>
                   <TableHeader>
-                    Name
+                    Update
                   </TableHeader>
                   <TableHeader>
                     Last Modified Date
@@ -299,7 +318,7 @@ function App() {
           working ? (
             <Spinner text="Working..." />
           ) : (
-            aiResp || 'No Results Yet'
+            <Markdown>{aiResp || 'No Results Yet'}</Markdown>
           )
         }
       </div>
