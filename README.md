@@ -11,6 +11,7 @@ oolama is not bundled with this app, you must have it running locally on your sy
 
 ## Distributions
  - [debian-linux](https://github.com/etw3gh/offline-oolama-desktop/blob/main/release/private-ai_0.1.0_amd64.deb)
+   - `sudo dpkg -i ~/Downloads/private-ai_0.1.0_amd64.deb`
  - mac-os: TODO
  - windows: TODO
 
