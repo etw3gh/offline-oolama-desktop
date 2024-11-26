@@ -55,7 +55,10 @@ async fn get_models() -> Result<Vec<LocalModel>, ErrorResponse> {
     let ollama = Ollama::default();
     
     match ollama.list_local_models().await {
-        Ok(models) => Ok(models),
+        Ok(mut models) => {
+          models.sort_by(|a, b| a.name.cmp(&b.name));
+          Ok(models)
+        }
         Err(e) => Err(ErrorResponse {
             code: "OLLAMA_LIST_MODEL_ERROR".to_string(),
             error: e.to_string(),
