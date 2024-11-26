@@ -1,11 +1,11 @@
-#[cfg(feature = "ollama")]
-use ollama_rs::Ollama;
+use log::info;
+use ollama_rs::generation::completion::request::GenerationRequest;
 use ollama_rs::models::LocalModel;
 use ollama_rs::models::ModelInfo;
-use ollama_rs::generation::completion::request::GenerationRequest;
-use log::info;
-use serde::{Deserialize, Serialize};
+#[cfg(feature = "ollama")]
+use ollama_rs::Ollama;
 use reqwest;
+use serde::{Deserialize, Serialize};
 use tauri::Emitter;
 
 #[derive(Debug, Serialize)]
@@ -32,20 +32,19 @@ struct PullResponse {
     status: String,
 }
 
-
 #[cfg(feature = "ollama")]
 #[tauri::command]
 async fn lama(model: &str, query: &str) -> Result<String, ErrorResponse> {
     let ollama = Ollama::default();
     // let modelfoo = "llama3.2:latest";
     let request = GenerationRequest::new(model.to_string(), query.to_string());
-    
+
     match ollama.generate(request).await {
         Ok(response) => Ok(response.response),
         Err(e) => Err(ErrorResponse {
-          code: "OLLAMA_GENERATE_ERROR".to_string(),
-          error: e.to_string(),
-      })
+            code: "OLLAMA_GENERATE_ERROR".to_string(),
+            error: e.to_string(),
+        }),
     }
 }
 
@@ -53,16 +52,16 @@ async fn lama(model: &str, query: &str) -> Result<String, ErrorResponse> {
 #[tauri::command]
 async fn get_models() -> Result<Vec<LocalModel>, ErrorResponse> {
     let ollama = Ollama::default();
-    
+
     match ollama.list_local_models().await {
         Ok(mut models) => {
-          models.sort_by(|a, b| a.name.cmp(&b.name));
-          Ok(models)
+            models.sort_by(|a, b| a.name.cmp(&b.name));
+            Ok(models)
         }
         Err(e) => Err(ErrorResponse {
             code: "OLLAMA_LIST_MODEL_ERROR".to_string(),
             error: e.to_string(),
-        })
+        }),
     }
 }
 
@@ -76,7 +75,7 @@ async fn fetch_model_info(model: &str) -> Result<ModelInfo, ErrorResponse> {
         Err(e) => Err(ErrorResponse {
             code: "OLLAMA_LIST_MODEL_ERROR".to_string(),
             error: e.to_string(),
-        })
+        }),
     }
 }
 
@@ -84,49 +83,46 @@ async fn fetch_model_info(model: &str) -> Result<ModelInfo, ErrorResponse> {
 #[cfg(feature = "ollama")]
 #[tauri::command]
 async fn fetch_avail_models() -> Result<Response, String> {
-  let client = reqwest::Client::new();
+    let client = reqwest::Client::new();
 
-  let url = "https://ollama-models.zwz.workers.dev/";
+    let url = "https://ollama-models.zwz.workers.dev/";
 
-  match client.get(url).send().await {
-      Ok(response) => {
-          let status = response.status().as_u16();
-          match response.text().await {
-              Ok(text) => Ok(Response {
-                  data: text,
-                  status,
-              }),
-              Err(e) => Err(e.to_string())
-          }
-      },
-      Err(e) => Err(e.to_string())
-  }
+    match client.get(url).send().await {
+        Ok(response) => {
+            let status = response.status().as_u16();
+            match response.text().await {
+                Ok(text) => Ok(Response { data: text, status }),
+                Err(e) => Err(e.to_string()),
+            }
+        }
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 #[cfg(feature = "ollama")]
 #[tauri::command]
 async fn pull_model(window: tauri::Window, model: &str) -> Result<PullResponse, ErrorResponse> {
-  let ollama = Ollama::default();
+    let ollama = Ollama::default();
 
-  match ollama.pull_model(model.to_string(), true).await {
-      Ok(status) => {
-          let progress = PullProgress {
-              digest: status.digest,
-              completed: status.completed,
-              total: status.total,
-          };
+    match ollama.pull_model(model.to_string(), true).await {
+        Ok(status) => {
+            let progress = PullProgress {
+                digest: status.digest,
+                completed: status.completed,
+                total: status.total,
+            };
 
-          window.emit("pull-progress", &progress).unwrap();
+            window.emit("pull-progress", &progress).unwrap();
 
-          Ok(PullResponse {
-              status: "completed".to_string() 
-          })
-      },
-      Err(e) => Err(ErrorResponse {
-          code: "OLLAMA_PULL_MODEL_ERROR".to_string(),
-          error: e.to_string(),
-      })
-  }
+            Ok(PullResponse {
+                status: "completed".to_string(),
+            })
+        }
+        Err(e) => Err(ErrorResponse {
+            code: "OLLAMA_PULL_MODEL_ERROR".to_string(),
+            error: e.to_string(),
+        }),
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -135,6 +131,7 @@ pub fn run() {
     info!("{}", "Ollama feature is enabled");
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
