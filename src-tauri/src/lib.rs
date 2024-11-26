@@ -36,7 +36,7 @@ struct PullResponse {
 #[tauri::command]
 async fn lama(model: &str, query: &str) -> Result<String, ErrorResponse> {
     let ollama = Ollama::default();
-    // let modelfoo = "llama3.2:latest";
+
     let request = GenerationRequest::new(model.to_string(), query.to_string());
 
     match ollama.generate(request).await {

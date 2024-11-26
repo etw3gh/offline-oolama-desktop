@@ -8,7 +8,6 @@ This template should help get you started developing with Tauri and React in Vit
 
 oolama is not bundled with this app, you must have it running locally on your system
 
-
 ## Distributions
  - [debian-linux](https://github.com/etw3gh/offline-oolama-desktop/blob/main/release/private-ai_0.1.0_amd64.deb)
    - After Downloading Install with: `sudo dpkg -i ~/Downloads/private-ai_0.1.0_amd64.deb`
